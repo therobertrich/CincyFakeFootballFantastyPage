@@ -433,10 +433,27 @@
                 document.getElementById('errorState').style.display = 'none';
                 document.getElementById('dashboardContent').style.display = 'none';
 
+                // Show current league ID for debugging
+                document.getElementById('currentLeagueId').textContent = LEAGUE_ID;
+
+                // Validate league ID
+                if (!LEAGUE_ID || LEAGUE_ID === 'YOUR_LEAGUE_ID_HERE') {
+                    throw new Error('Please replace YOUR_LEAGUE_ID_HERE with your actual Sleeper league ID');
+                }
+
+                console.log('Fetching league data for:', LEAGUE_ID);
+
                 // Fetch league data
                 leagueData = await fetchSleeperAPI(`league/${LEAGUE_ID}`);
+                
+                if (!leagueData || !leagueData.league_id) {
+                    throw new Error('Invalid league data received - check if league ID is correct');
+                }
+
                 document.getElementById('leagueName').textContent = leagueData.name;
                 document.getElementById('seasonInfo').textContent = `${leagueData.season} Season • Week ${leagueData.settings.leg || 1}`;
+
+                console.log('League loaded:', leagueData.name);
 
                 // Fetch rosters and users
                 [rosters, users] = await Promise.all([
@@ -444,13 +461,19 @@
                     fetchSleeperAPI(`league/${LEAGUE_ID}/users`)
                 ]);
 
+                console.log('Rosters and users loaded:', rosters.length, 'teams');
+
                 // Fetch all matchups for the season
-                const totalWeeks = leagueData.settings.playoff_week_start - 1;
+                const currentWeek = leagueData.settings.leg || 1;
+                const totalWeeks = Math.min(currentWeek, leagueData.settings.playoff_week_start - 1);
                 const matchupPromises = [];
+                
                 for (let week = 1; week <= totalWeeks; week++) {
                     matchupPromises.push(fetchSleeperAPI(`league/${LEAGUE_ID}/matchups/${week}`));
                 }
                 matchups = await Promise.all(matchupPromises);
+
+                console.log('Matchups loaded for', totalWeeks, 'weeks');
 
                 // Process data
                 const teams = rosters.map(roster => {
@@ -481,10 +504,14 @@
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('dashboardContent').style.display = 'block';
 
+                console.log('Dashboard loaded successfully');
+
             } catch (error) {
                 console.error('Error loading league data:', error);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('errorState').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+                document.getElementById('currentLeagueId').textContent = LEAGUE_ID;
             }
         }
 
