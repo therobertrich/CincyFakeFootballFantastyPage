@@ -358,8 +358,8 @@
 
     <script>
         // Configuration - Replace with your league ID
-        const LEAGUE_ID = '1257464138565689344';
-        const CURRENT_SEASON = '2025';
+        const LEAGUE_ID = 'YOUR_LEAGUE_ID_HERE';
+        const CURRENT_SEASON = '2024';
 
         let leagueData = null;
         let rosters = null;
@@ -568,15 +568,19 @@
                 renderRankings('powerRankings', powerSorted, 'powerScore', 
                     val => val.toFixed(1), 'power');
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'grid';
-                document.getElementById('refreshBtn').style.display = 'block';
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (dashboardEl) dashboardEl.style.display = 'grid';
+                if (refreshBtn) refreshBtn.style.display = 'block';
 
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('errorMessage').textContent = `Failed to load league data: ${error.message}`;
+                const loadingEl = document.getElementById('loading');
+                const errorEl = document.getElementById('error');
+                const errorMessageEl = document.getElementById('errorMessage');
+                
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (errorEl) errorEl.style.display = 'block';
+                if (errorMessageEl) errorMessageEl.textContent = `Failed to load league data: ${error.message}`;
             }
         }
 
