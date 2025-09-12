@@ -358,8 +358,8 @@
 
     <script>
         // Configuration - Replace with your league ID
-        const LEAGUE_ID = 'YOUR_LEAGUE_ID_HERE';
-        const CURRENT_SEASON = '2024';
+        const LEAGUE_ID = '1257464138565689344';
+        const CURRENT_SEASON = '2025';
 
         let leagueData = null;
         let rosters = null;
@@ -580,7 +580,21 @@
                 
                 if (loadingEl) loadingEl.style.display = 'none';
                 if (errorEl) errorEl.style.display = 'block';
-                if (errorMessageEl) errorMessageEl.textContent = `Failed to load league data: ${error.message}`;
+                
+                let errorMessage = `Failed to load league data: ${error.message}`;
+                
+                // Provide specific guidance for common mobile issues
+                if (error.message.includes('400')) {
+                    errorMessage += '\n\nTip: If you\'re on mobile, try:\n• Refreshing the page\n• Switching to desktop\n• Checking if your League ID is correct';
+                } else if (error.message.includes('CORS') || error.message.includes('network')) {
+                    errorMessage += '\n\nNetwork issue detected. Please check your internet connection and try again.';
+                }
+                
+                if (errorMessageEl) errorMessageEl.textContent = errorMessage;
+                
+                // Show refresh button even on error
+                const refreshBtn = document.getElementById('refreshBtn');
+                if (refreshBtn) refreshBtn.style.display = 'block';
             }
         }
 
