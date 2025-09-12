@@ -457,19 +457,25 @@
                     const user = users.find(u => u.user_id === roster.owner_id);
                     const luckIndex = calculateLuckIndex(roster, matchups);
                     const playoffOdds = calculatePlayoffOdds(roster, matchups);
+                    const efficiency = calculateEfficiency(roster, matchups);
+                    const powerRanking = calculatePowerRanking(roster, matchups);
                     
                     return {
                         name: user ? (user.display_name || user.username || 'Unknown') : 'Unknown',
                         wins: roster.settings.wins || 0,
                         losses: roster.settings.losses || 0,
                         luckIndex: luckIndex,
-                        playoffOdds: playoffOdds
+                        playoffOdds: playoffOdds,
+                        efficiency: efficiency,
+                        powerRanking: powerRanking
                     };
                 });
 
                 // Render the data
                 renderLuckIndex(teams);
                 renderPlayoffOdds(teams);
+                renderEfficiency(teams);
+                renderPowerRanking(teams);
 
                 // Show dashboard
                 document.getElementById('loadingState').style.display = 'none';
