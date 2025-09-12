@@ -1,605 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Football Dashboard</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0d1117;
-            color: #f0f6fc;
-            line-height: 1.5;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 20px;
-            background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
-            border-radius: 12px;
-            border: 1px solid #30363d;
-        }
-
-        .league-name {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #58a6ff, #79c0ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .season-info {
-            font-size: 1.1rem;
-            color: #8b949e;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            font-size: 1.2rem;
-            color: #58a6ff;
-        }
-
-        .error {
-            background: #21262d;
-            border: 1px solid #f85149;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-            color: #f85149;
-            text-align: center;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: #21262d;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 25px;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-2px);
-            border-color: #58a6ff;
-            box-shadow: 0 8px 32px rgba(88, 166, 255, 0.1);
-        }
-
-        .card-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #f0f6fc;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-title::before {
-            content: '';
-            width: 4px;
-            height: 20px;
-            background: linear-gradient(45deg, #58a6ff, #79c0ff);
-            border-radius: 2px;
-        }
-
-        .ranking-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #30363d;
-            transition: all 0.2s ease;
-        }
-
-        .ranking-item:last-child {
-            border-bottom: none;
-        }
-
-        .ranking-item:hover {
-            background: rgba(88, 166, 255, 0.05);
-            border-radius: 6px;
-            margin: 0 -8px;
-            padding: 12px 8px;
-        }
-
-        .rank {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            margin-right: 15px;
-            font-size: 0.9rem;
-        }
-
-        .rank.top3 {
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            color: #0d1117;
-        }
-
-        .rank.top5 {
-            background: linear-gradient(45deg, #58a6ff, #79c0ff);
-            color: #0d1117;
-        }
-
-        .rank.bottom {
-            background: linear-gradient(45deg, #f85149, #ff7b72);
-            color: #f0f6fc;
-        }
-
-        .rank.middle {
-            background: #30363d;
-            color: #8b949e;
-        }
-
-        .team-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .team-name {
-            font-weight: 600;
-            font-size: 1rem;
-            color: #f0f6fc;
-            margin-bottom: 2px;
-        }
-
-        .team-record {
-            font-size: 0.85rem;
-            color: #8b949e;
-        }
-
-        .metric-value {
-            font-weight: 700;
-            font-size: 1rem;
-            text-align: right;
-            min-width: 60px;
-        }
-
-        .luck-positive {
-            color: #3fb950;
-        }
-
-        .luck-negative {
-            color: #f85149;
-        }
-
-        .luck-neutral {
-            color: #ffd700;
-        }
-
-        .playoff-high {
-            color: #3fb950;
-        }
-
-        .playoff-medium {
-            color: #ffd700;
-        }
-
-        .playoff-low {
-            color: #f85149;
-        }
-
-        .efficiency-high {
-            color: #3fb950;
-        }
-
-        .efficiency-medium {
-            color: #ffd700;
-        }
-
-        .efficiency-low {
-            color: #f85149;
-        }
-
-        .power-high {
-            color: #58a6ff;
-        }
-
-        .refresh-btn {
-            background: linear-gradient(45deg, #238636, #2ea043);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: block;
-            margin: 30px auto;
-            font-size: 1rem;
-        }
-
-        .refresh-btn:hover {
-            background: linear-gradient(45deg, #2ea043, #3fb950);
-            transform: translateY(-1px);
-        }
-
-        .refresh-btn:active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            .league-name {
-                font-size: 2rem;
-            }
-
-            .card {
-                padding: 20px;
-            }
-
-            .card-title {
-                font-size: 1.2rem;
-            }
-
-            .ranking-item {
-                padding: 10px 0;
-            }
-
-            .rank {
-                width: 30px;
-                height: 30px;
-                margin-right: 12px;
-                font-size: 0.8rem;
-            }
-
-            .team-name {
-                font-size: 0.9rem;
-            }
-
-            .team-record {
-                font-size: 0.8rem;
-            }
-
-            .metric-value {
-                font-size: 0.9rem;
-                min-width: 50px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header {
-                padding: 20px 15px;
-            }
-
-            .league-name {
-                font-size: 1.6rem;
-            }
-
-            .season-info {
-                font-size: 1rem;
-            }
-
-            .card {
-                padding: 15px;
-            }
-
-            .ranking-item {
-                padding: 8px 0;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sleeper League Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #1a1a1a; color: #f1f1f1; font-family: 'Inter', sans-serif; }
+    .card { background-color: #2a2a2a; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 class="league-name" id="leagueName">Loading...</h1>
-            <p class="season-info" id="seasonInfo">Fantasy Football Dashboard</p>
-        </div>
+<body class="p-4">
+  <h1 class="text-2xl font-bold text-center mb-6">Fantasy League Dashboard</h1>
 
-        <div id="loading" class="loading">
-            Loading league data...
-        </div>
-
-        <div id="error" class="error" style="display: none;">
-            <h3>Error Loading Data</h3>
-            <p id="errorMessage"></p>
-        </div>
-
-        <div id="dashboard" class="dashboard-grid" style="display: none;">
-            <div class="card">
-                <h2 class="card-title">Luck Index</h2>
-                <div id="luckIndex"></div>
-            </div>
-
-            <div class="card">
-                <h2 class="card-title">Playoff Odds</h2>
-                <div id="playoffOdds"></div>
-            </div>
-
-            <div class="card">
-                <h2 class="card-title">Power Rankings</h2>
-                <div id="powerRankings"></div>
-            </div>
-
-            <div class="card">
-                <h2 class="card-title">Efficiency Rankings</h2>
-                <div id="efficiencyRankings"></div>
-            </div>
-        </div>
-
-        <button class="refresh-btn" onclick="loadData()" id="refreshBtn" style="display: none;">
-            Refresh Data
-        </button>
+  <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card">
+      <h2 class="text-xl font-semibold mb-2">Luck Index</h2>
+      <ul id="luckIndex"></ul>
     </div>
+    <div class="card">
+      <h2 class="text-xl font-semibold mb-2">Playoff Odds</h2>
+      <ul id="playoffOdds"></ul>
+    </div>
+    <div class="card">
+      <h2 class="text-xl font-semibold mb-2">Power Rankings</h2>
+      <ul id="powerRankings"></ul>
+    </div>
+    <div class="card">
+      <h2 class="text-xl font-semibold mb-2">Efficiency Rankings</h2>
+      <ul id="efficiencyRankings"></ul>
+    </div>
+  </div>
 
-    <script>
-        // Configuration - Replace with your league ID
-        const LEAGUE_ID = '1257464138565689344';
-        const CURRENT_SEASON = '2025';
+  <script>
+    // Replace with your league ID
+    const LEAGUE_ID = "1257464138565689344";
 
-        let leagueData = null;
-        let rosters = null;
-        let users = null;
-        let matchups = null;
+    async function fetchLeagueData() {
+      const [usersRes, rostersRes, matchupsRes] = await Promise.all([
+        fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/users`),
+        fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/rosters`),
+        fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/matchups/${getCurrentWeek()}`)
+      ]);
 
-        async function fetchSleeperData(endpoint) {
-            try {
-                const response = await fetch(`https://api.sleeper.app/v1/${endpoint}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return await response.json();
-            } catch (error) {
-                console.error(`Error fetching ${endpoint}:`, error);
-                throw error;
-            }
-        }
+      const users = await usersRes.json();
+      const rosters = await rostersRes.json();
+      const matchups = await matchupsRes.json();
 
-        function getRankClass(rank, total) {
-            if (rank <= 3) return 'top3';
-            if (rank <= Math.ceil(total * 0.4)) return 'top5';
-            if (rank > total - 3) return 'bottom';
-            return 'middle';
-        }
+      return { users, rosters, matchups };
+    }
 
-        function getValueClass(value, type) {
-            switch (type) {
-                case 'luck':
-                    if (value > 0.5) return 'luck-positive';
-                    if (value < -0.5) return 'luck-negative';
-                    return 'luck-neutral';
-                case 'playoff':
-                    if (value > 70) return 'playoff-high';
-                    if (value > 30) return 'playoff-medium';
-                    return 'playoff-low';
-                case 'efficiency':
-                    if (value > 85) return 'efficiency-high';
-                    if (value > 70) return 'efficiency-medium';
-                    return 'efficiency-low';
-                case 'power':
-                    return 'power-high';
-                default:
-                    return '';
-            }
-        }
+    function getCurrentWeek() {
+      const now = new Date();
+      // Quick placeholder: you can hardcode or fetch NFL week elsewhere
+      return Math.min(Math.floor(((now - new Date(now.getFullYear(), 8, 1)) / (7*24*60*60*1000))) + 1, 18);
+    }
 
-        function calculateLuckIndex(roster, allRosters) {
-            // Luck = (Actual Wins - Expected Wins) / Games Played
-            // Expected wins based on points scored vs league average
-            const totalPoints = roster.settings.fpts + roster.settings.fpts_decimal / 100;
-            const avgPoints = allRosters.reduce((sum, r) => 
-                sum + r.settings.fpts + r.settings.fpts_decimal / 100, 0) / allRosters.length;
-            
-            const gamesPlayed = (roster.settings.wins || 0) + (roster.settings.losses || 0) + (roster.settings.ties || 0);
-            if (gamesPlayed === 0) return 0;
-            
-            const expectedWinRate = Math.max(0.1, Math.min(0.9, 0.5 + (totalPoints - avgPoints) / (avgPoints * 2)));
-            const expectedWins = expectedWinRate * gamesPlayed;
-            const actualWins = (roster.settings.wins || 0) + (roster.settings.ties || 0) * 0.5;
-            
-            return ((actualWins - expectedWins) / gamesPlayed) * 100;
-        }
+    function buildLuckIndex(rosters, matchups, users) {
+      // Luck index: actual wins - expected wins (based on points)
+      const points = {};
+      matchups.forEach(m => {
+        points[m.roster_id] = (points[m.roster_id] || 0) + m.points;
+      });
 
-        function calculatePlayoffOdds(roster, allRosters) {
-            // Simplified playoff odds based on current record and remaining schedule
-            const wins = roster.settings.wins || 0;
-            const losses = roster.settings.losses || 0;
-            const ties = roster.settings.ties || 0;
-            const totalGames = wins + losses + ties;
-            
-            if (totalGames === 0) return 50;
-            
-            const winRate = (wins + ties * 0.5) / totalGames;
-            const remainingGames = Math.max(0, 14 - totalGames); // Assuming 14 game season
-            const projectedWins = wins + (winRate * remainingGames);
-            
-            // Basic playoff threshold (usually around 7-8 wins)
-            const playoffThreshold = 7.5;
-            
-            if (projectedWins >= playoffThreshold + 1) return Math.min(95, 70 + (projectedWins - playoffThreshold) * 10);
-            if (projectedWins <= playoffThreshold - 1) return Math.max(5, 30 - (playoffThreshold - projectedWins) * 15);
-            
-            return 50 + (projectedWins - playoffThreshold) * 20;
-        }
+      const avgPoints = Object.values(points).reduce((a,b) => a+b, 0) / Object.values(points).length;
 
-        function calculateEfficiency(roster, allRosters) {
-            // Efficiency = Points Scored / Theoretical Max Points
-            const totalPoints = roster.settings.fpts + roster.settings.fpts_decimal / 100;
-            const maxPoints = allRosters.reduce((max, r) => 
-                Math.max(max, r.settings.fpts + r.settings.fpts_decimal / 100), 0);
-            
-            if (maxPoints === 0) return 0;
-            return (totalPoints / maxPoints) * 100;
-        }
+      return rosters.map(r => {
+        const user = users.find(u => u.user_id === r.owner_id);
+        return {
+          name: user?.display_name || "Unknown",
+          luck: (points[r.roster_id] - avgPoints).toFixed(1)
+        };
+      }).sort((a,b) => b.luck - a.luck);
+    }
 
-        function calculatePowerRanking(roster, allRosters) {
-            // Power ranking based on points, wins, and recent performance
-            const totalPoints = roster.settings.fpts + roster.settings.fpts_decimal / 100;
-            const wins = roster.settings.wins || 0;
-            const losses = roster.settings.losses || 0;
-            const ties = roster.settings.ties || 0;
-            const totalGames = wins + losses + ties;
-            
-            const pointsWeight = 0.6;
-            const recordWeight = 0.4;
-            
-            const pointsRank = allRosters.map(r => r.settings.fpts + r.settings.fpts_decimal / 100)
-                .sort((a, b) => b - a).indexOf(totalPoints) + 1;
-            
-            const winRate = totalGames > 0 ? (wins + ties * 0.5) / totalGames : 0;
-            const recordRank = allRosters.map(r => {
-                const w = r.settings.wins || 0;
-                const l = r.settings.losses || 0;
-                const t = r.settings.ties || 0;
-                const total = w + l + t;
-                return total > 0 ? (w + t * 0.5) / total : 0;
-            }).sort((a, b) => b - a).indexOf(winRate) + 1;
-            
-            return (pointsRank * pointsWeight + recordRank * recordWeight);
-        }
+    function buildEfficiencyRankings(rosters, matchups, users) {
+      // Efficiency: points / max_points
+      return rosters.map(r => {
+        const user = users.find(u => u.user_id === r.owner_id);
+        return {
+          name: user?.display_name || "Unknown",
+          efficiency: ((r.settings.fpts / r.settings.ppts) * 100 || 0).toFixed(1)
+        };
+      }).sort((a,b) => b.efficiency - a.efficiency);
+    }
 
-        function renderRankings(containerId, teams, valueKey, valueFormatter, valueType) {
-            const container = document.getElementById(containerId);
-            container.innerHTML = teams.map((team, index) => {
-                const rank = index + 1;
-                const rankClass = getRankClass(rank, teams.length);
-                const valueClass = getValueClass(team[valueKey], valueType);
-                
-                return `
-                    <div class="ranking-item">
-                        <div class="rank ${rankClass}">${rank}</div>
-                        <div class="team-info">
-                            <div class="team-name">${team.teamName}</div>
-                            <div class="team-record">${team.record}</div>
-                        </div>
-                        <div class="metric-value ${valueClass}">
-                            ${valueFormatter(team[valueKey])}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
+    function buildPowerRankings(rosters, users) {
+      // Power rankings: simple placeholder = wins - losses
+      return rosters.map(r => {
+        const user = users.find(u => u.user_id === r.owner_id);
+        return {
+          name: user?.display_name || "Unknown",
+          score: r.settings.wins - r.settings.losses
+        };
+      }).sort((a,b) => b.score - a.score);
+    }
 
-        async function loadData() {
-            try {
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('error').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'none';
-                document.getElementById('refreshBtn').style.display = 'none';
+    function buildPlayoffOdds(rosters, users) {
+      // Placeholder odds based on win percentage
+      return rosters.map(r => {
+        const user = users.find(u => u.user_id === r.owner_id);
+        const games = r.settings.wins + r.settings.losses;
+        const winPct = games ? (r.settings.wins / games) : 0;
+        return {
+          name: user?.display_name || "Unknown",
+          odds: (winPct * 100).toFixed(1)
+        };
+      }).sort((a,b) => b.odds - a.odds);
+    }
 
-                // Fetch all required data
-                [leagueData, rosters, users] = await Promise.all([
-                    fetchSleeperData(`league/${LEAGUE_ID}`),
-                    fetchSleeperData(`league/${LEAGUE_ID}/rosters`),
-                    fetchSleeperData(`league/${LEAGUE_ID}/users`)
-                ]);
+    function renderList(elId, data, key) {
+      const el = document.getElementById(elId);
+      el.innerHTML = "";
+      data.forEach((item, i) => {
+        const li = document.createElement("li");
+        li.className = "flex justify-between border-b border-gray-600 py-1";
+        li.innerHTML = `<span>${i+1}. ${item.name}</span><span>${item[key]}</span>`;
+        el.appendChild(li);
+      });
+    }
 
-                // Update header
-                document.getElementById('leagueName').textContent = leagueData.name;
-                document.getElementById('seasonInfo').textContent = `${leagueData.season} Season • ${leagueData.total_rosters} Teams`;
+    async function init() {
+      const { users, rosters, matchups } = await fetchLeagueData();
+      renderList("luckIndex", buildLuckIndex(rosters, matchups, users), "luck");
+      renderList("efficiencyRankings", buildEfficiencyRankings(rosters, matchups, users), "efficiency");
+      renderList("powerRankings", buildPowerRankings(rosters, users), "score");
+      renderList("playoffOdds", buildPlayoffOdds(rosters, users), "odds");
+    }
 
-                // Create user map
-                const userMap = {};
-                users.forEach(user => {
-                    userMap[user.user_id] = user.display_name || user.username || 'Unknown';
-                });
-
-                // Process team data
-                const teams = rosters.map(roster => {
-                    const wins = roster.settings.wins || 0;
-                    const losses = roster.settings.losses || 0;
-                    const ties = roster.settings.ties || 0;
-                    
-                    return {
-                        rosterId: roster.roster_id,
-                        teamName: userMap[roster.owner_id] || `Team ${roster.roster_id}`,
-                        record: `${wins}-${losses}${ties > 0 ? `-${ties}` : ''}`,
-                        totalPoints: roster.settings.fpts + (roster.settings.fpts_decimal || 0) / 100,
-                        roster: roster
-                    };
-                });
-
-                // Calculate metrics
-                const teamsWithMetrics = teams.map(team => ({
-                    ...team,
-                    luckIndex: calculateLuckIndex(team.roster, rosters),
-                    playoffOdds: calculatePlayoffOdds(team.roster, rosters),
-                    efficiency: calculateEfficiency(team.roster, rosters),
-                    powerScore: calculatePowerRanking(team.roster, rosters)
-                }));
-
-                // Sort and render each ranking
-                const luckSorted = [...teamsWithMetrics].sort((a, b) => b.luckIndex - a.luckIndex);
-                const playoffSorted = [...teamsWithMetrics].sort((a, b) => b.playoffOdds - a.playoffOdds);
-                const efficiencySorted = [...teamsWithMetrics].sort((a, b) => b.efficiency - a.efficiency);
-                const powerSorted = [...teamsWithMetrics].sort((a, b) => a.powerScore - b.powerScore);
-
-                renderRankings('luckIndex', luckSorted, 'luckIndex', 
-                    val => `${val > 0 ? '+' : ''}${val.toFixed(1)}`, 'luck');
-                
-                renderRankings('playoffOdds', playoffSorted, 'playoffOdds', 
-                    val => `${val.toFixed(0)}%`, 'playoff');
-                
-                renderRankings('efficiencyRankings', efficiencySorted, 'efficiency', 
-                    val => `${val.toFixed(1)}%`, 'efficiency');
-                
-                renderRankings('powerRankings', powerSorted, 'powerScore', 
-                    val => val.toFixed(1), 'power');
-
-                if (loadingEl) loadingEl.style.display = 'none';
-                if (dashboardEl) dashboardEl.style.display = 'grid';
-                if (refreshBtn) refreshBtn.style.display = 'block';
-
-            } catch (error) {
-                console.error('Error loading data:', error);
-                const loadingEl = document.getElementById('loading');
-                const errorEl = document.getElementById('error');
-                const errorMessageEl = document.getElementById('errorMessage');
-                
-                if (loadingEl) loadingEl.style.display = 'none';
-                if (errorEl) errorEl.style.display = 'block';
-                
-                let errorMessage = `Failed to load league data: ${error.message}`;
-                
-                // Provide specific guidance for common mobile issues
-                if (error.message.includes('400')) {
-                    errorMessage += '\n\nTip: If you\'re on mobile, try:\n• Refreshing the page\n• Switching to desktop\n• Checking if your League ID is correct';
-                } else if (error.message.includes('CORS') || error.message.includes('network')) {
-                    errorMessage += '\n\nNetwork issue detected. Please check your internet connection and try again.';
-                }
-                
-                if (errorMessageEl) errorMessageEl.textContent = errorMessage;
-                
-                // Show refresh button even on error
-                const refreshBtn = document.getElementById('refreshBtn');
-                if (refreshBtn) refreshBtn.style.display = 'block';
-            }
-        }
-
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', loadData);
-    </script>
+    init();
+  </script>
 </body>
 </html>
