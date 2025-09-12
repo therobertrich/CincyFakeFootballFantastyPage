@@ -354,12 +354,12 @@
             content.innerHTML = `
                 <div class="dashboard">
                     <div class="card">
-                        <h3>📊 Current Standings</h3>
+                        <h3>🏆 Standings</h3>
                         ${standings.map((team, index) => `
                             <div class="team-row">
                                 <div>
                                     <div class="team-name">${index + 1}. ${team.name}</div>
-                                    <div style="color: #7f8c8d; font-size: 0.9rem;">
+                                    <div class="team-info">
                                         ${team.wins}-${team.losses} • ${team.points_for.toFixed(1)} PF
                                     </div>
                                 </div>
@@ -368,6 +368,7 @@
                                 </div>
                             </div>
                         `).join('')}
+                        <div class="card-footer">Playoff odds based on current standings</div>
                     </div>
 
                     <div class="card">
@@ -375,39 +376,40 @@
                         ${standings.map(team => `
                             <div class="team-row">
                                 <div class="team-name">${team.name}</div>
-                                <div class="luck-bar">
-                                    <div class="luck-fill ${getLuckClass(team.luck_index)}" 
-                                         style="width: ${Math.abs(team.luck_index) * 20 + 10}%"></div>
-                                </div>
-                                <div class="stat-value">
-                                    ${team.luck_index > 0 ? '+' : ''}${team.luck_index.toFixed(1)}
+                                <div style="display: flex; align-items: center;">
+                                    <div class="luck-bar">
+                                        <div class="luck-fill ${getLuckClass(team.luck_index)}" 
+                                             style="width: ${Math.min(Math.abs(team.luck_index) * 25 + 15, 100)}%"></div>
+                                    </div>
+                                    <div class="stat-value">
+                                        ${team.luck_index > 0 ? '+' : ''}${team.luck_index.toFixed(1)}
+                                    </div>
                                 </div>
                             </div>
                         `).join('')}
-                        <div style="margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
-                            Positive = Lucky | Negative = Unlucky
-                        </div>
+                        <div class="card-footer">Positive = Lucky • Negative = Unlucky</div>
                     </div>
 
                     <div class="card">
-                        <h3>💪 Power Rankings</h3>
+                        <h3>⚡ Power Rankings</h3>
                         ${standings
                             .sort((a, b) => b.potential_points - a.potential_points)
                             .map((team, index) => `
                                 <div class="team-row">
                                     <div>
                                         <div class="team-name">${index + 1}. ${team.name}</div>
-                                        <div style="color: #7f8c8d; font-size: 0.9rem;">
-                                            Avg: ${(team.potential_points / Math.max(team.wins + team.losses, 1)).toFixed(1)} PPG
+                                        <div class="team-info">
+                                            ${(team.potential_points / Math.max(team.wins + team.losses, 1)).toFixed(1)} PPG avg
                                         </div>
                                     </div>
                                     <div class="stat-value">${team.potential_points.toFixed(1)}</div>
                                 </div>
                             `).join('')}
+                        <div class="card-footer">Total points scored across all weeks</div>
                     </div>
 
                     <div class="card">
-                        <h3>🎯 Efficiency Rating</h3>
+                        <h3>📈 Efficiency</h3>
                         ${standings
                             .sort((a, b) => (b.points_for / b.potential_points) - (a.points_for / a.potential_points))
                             .map((team, index) => `
@@ -418,9 +420,7 @@
                                     </div>
                                 </div>
                             `).join('')}
-                        <div style="margin-top: 15px; font-size: 0.9rem; color: #7f8c8d;">
-                            Points For vs Potential Points
-                        </div>
+                        <div class="card-footer">Points scored vs potential points</div>
                     </div>
                 </div>
             `;
