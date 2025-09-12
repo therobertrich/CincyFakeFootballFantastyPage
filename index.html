@@ -6,41 +6,51 @@
   <title>Sleeper League Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { background-color: #1a1a1a; color: #f1f1f1; font-family: 'Inter', sans-serif; }
-    .card { background-color: #2a2a2a; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    body { background-color: #0f0f0f; color: #eaeaea; font-family: 'Inter', sans-serif; }
+    .card { background-color: #1d1d1d; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    h1, h2 { color: #ffffff; }
+    .sleeper-accent { color: #fdb913; }
+    .avatar { width: 24px; height: 24px; border-radius: 9999px; margin-right: 8px; }
   </style>
 </head>
 <body class="p-4">
-  <h1 class="text-2xl font-bold text-center mb-6">Fantasy League Dashboard</h1>
+  <h1 class="text-3xl font-bold text-center mb-6 sleeper-accent">Sleeper League Dashboard</h1>
 
   <div id="dashboard" class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div class="card">
       <h2 class="text-xl font-semibold mb-2">Luck Index</h2>
+      <p class="text-sm mb-2 text-gray-400">Measures how much a team has over/underperformed compared to average points scored.</p>
       <ul id="luckIndex"></ul>
     </div>
     <div class="card">
       <h2 class="text-xl font-semibold mb-2">Playoff Odds</h2>
+      <p class="text-sm mb-2 text-gray-400">Estimated chance of making the playoffs based on win percentage.</p>
       <ul id="playoffOdds"></ul>
     </div>
     <div class="card">
       <h2 class="text-xl font-semibold mb-2">Power Rankings</h2>
+      <p class="text-sm mb-2 text-gray-400">Ranking teams by their record (wins vs. losses).</p>
       <ul id="powerRankings"></ul>
     </div>
     <div class="card">
       <h2 class="text-xl font-semibold mb-2">Efficiency Rankings</h2>
+      <p class="text-sm mb-2 text-gray-400">Compares points scored versus potential maximum points.</p>
       <ul id="efficiencyRankings"></ul>
     </div>
   </div>
 
   <script>
-    // Replace with your league ID
     const LEAGUE_ID = "1257464138565689344";
 
     async function fetchLeagueData() {
+      const stateRes = await fetch("https://api.sleeper.app/v1/state/nfl");
+      const state = await stateRes.json();
+      const currentWeek = state.week;
+
       const [usersRes, rostersRes, matchupsRes] = await Promise.all([
         fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/users`),
         fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/rosters`),
-        fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/matchups/${getCurrentWeek()}`)
+        fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/matchups/${currentWeek}`)
       ]);
 
       const users = await usersRes.json();
@@ -50,14 +60,18 @@
       return { users, rosters, matchups };
     }
 
-    function getCurrentWeek() {
-      const now = new Date();
-      // Quick placeholder: you can hardcode or fetch NFL week elsewhere
-      return Math.min(Math.floor(((now - new Date(now.getFullYear(), 8, 1)) / (7*24*60*60*1000))) + 1, 18);
+    function getUserByRoster(roster, users) {
+      return users.find(u => u.user_id === roster.owner_id);
+    }
+
+    function getAvatarUrl(user) {
+      if (user?.avatar) {
+        return `https://sleepercdn.com/avatars/${user.avatar}`;
+      }
+      return "https://sleepercdn.com/images/v2/icons/player_default.webp";
     }
 
     function buildLuckIndex(rosters, matchups, users) {
-      // Luck index: actual wins - expected wins (based on points)
       const points = {};
       matchups.forEach(m => {
         points[m.roster_id] = (points[m.roster_id] || 0) + m.points;
@@ -66,66 +80,73 @@
       const avgPoints = Object.values(points).reduce((a,b) => a+b, 0) / Object.values(points).length;
 
       return rosters.map(r => {
-        const user = users.find(u => u.user_id === r.owner_id);
+        const user = getUserByRoster(r, users);
         return {
           name: user?.display_name || "Unknown",
-          luck: (points[r.roster_id] - avgPoints).toFixed(1)
+          avatar: getAvatarUrl(user),
+          value: (points[r.roster_id] - avgPoints).toFixed(1)
         };
-      }).sort((a,b) => b.luck - a.luck);
+      }).sort((a,b) => b.value - a.value);
     }
 
     function buildEfficiencyRankings(rosters, matchups, users) {
-      // Efficiency: points / max_points
       return rosters.map(r => {
-        const user = users.find(u => u.user_id === r.owner_id);
+        const user = getUserByRoster(r, users);
         return {
           name: user?.display_name || "Unknown",
-          efficiency: ((r.settings.fpts / r.settings.ppts) * 100 || 0).toFixed(1)
+          avatar: getAvatarUrl(user),
+          value: ((r.settings.fpts / r.settings.ppts) * 100 || 0).toFixed(1) + "%"
         };
-      }).sort((a,b) => b.efficiency - a.efficiency);
+      }).sort((a,b) => parseFloat(b.value) - parseFloat(a.value));
     }
 
     function buildPowerRankings(rosters, users) {
-      // Power rankings: simple placeholder = wins - losses
       return rosters.map(r => {
-        const user = users.find(u => u.user_id === r.owner_id);
+        const user = getUserByRoster(r, users);
         return {
           name: user?.display_name || "Unknown",
-          score: r.settings.wins - r.settings.losses
+          avatar: getAvatarUrl(user),
+          value: r.settings.wins - r.settings.losses
         };
-      }).sort((a,b) => b.score - a.score);
+      }).sort((a,b) => b.value - a.value);
     }
 
     function buildPlayoffOdds(rosters, users) {
-      // Placeholder odds based on win percentage
       return rosters.map(r => {
-        const user = users.find(u => u.user_id === r.owner_id);
+        const user = getUserByRoster(r, users);
         const games = r.settings.wins + r.settings.losses;
         const winPct = games ? (r.settings.wins / games) : 0;
         return {
           name: user?.display_name || "Unknown",
-          odds: (winPct * 100).toFixed(1)
+          avatar: getAvatarUrl(user),
+          value: (winPct * 100).toFixed(1) + "%"
         };
-      }).sort((a,b) => b.odds - a.odds);
+      }).sort((a,b) => parseFloat(b.value) - parseFloat(a.value));
     }
 
-    function renderList(elId, data, key) {
+    function renderList(elId, data) {
       const el = document.getElementById(elId);
       el.innerHTML = "";
       data.forEach((item, i) => {
         const li = document.createElement("li");
-        li.className = "flex justify-between border-b border-gray-600 py-1";
-        li.innerHTML = `<span>${i+1}. ${item.name}</span><span>${item[key]}</span>`;
+        li.className = "flex justify-between items-center border-b border-gray-700 py-2";
+        li.innerHTML = `
+          <div class="flex items-center">
+            <img src="${item.avatar}" class="avatar" alt="avatar"/>
+            <span>${i+1}. ${item.name}</span>
+          </div>
+          <span class='sleeper-accent'>${item.value}</span>
+        `;
         el.appendChild(li);
       });
     }
 
     async function init() {
       const { users, rosters, matchups } = await fetchLeagueData();
-      renderList("luckIndex", buildLuckIndex(rosters, matchups, users), "luck");
-      renderList("efficiencyRankings", buildEfficiencyRankings(rosters, matchups, users), "efficiency");
-      renderList("powerRankings", buildPowerRankings(rosters, users), "score");
-      renderList("playoffOdds", buildPlayoffOdds(rosters, users), "odds");
+      renderList("luckIndex", buildLuckIndex(rosters, matchups, users));
+      renderList("efficiencyRankings", buildEfficiencyRankings(rosters, matchups, users));
+      renderList("powerRankings", buildPowerRankings(rosters, users));
+      renderList("playoffOdds", buildPlayoffOdds(rosters, users));
     }
 
     init();
